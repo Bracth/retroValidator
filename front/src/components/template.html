@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>RETROGUARD // AI Forensic Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface": "#131315",
+                        "on-secondary": "#003825",
+                        "surface-container-lowest": "#0e0e10",
+                        "on-background": "#e5e1e4",
+                        "tertiary": "#ffd2d5",
+                        "on-tertiary-fixed": "#400010",
+                        "error": "#ffb4ab",
+                        "on-surface-variant": "#bbc9cd",
+                        "on-tertiary": "#67001f",
+                        "error-container": "#93000a",
+                        "on-error-container": "#ffdad6",
+                        "on-primary": "#00363e",
+                        "tertiary-fixed": "#ffdadc",
+                        "primary-fixed-dim": "#2fd9f4",
+                        "tertiary-container": "#ffaab2",
+                        "surface-container": "#201f22",
+                        "primary-container": "#22d3ee",
+                        "inverse-on-surface": "#313032",
+                        "surface-container-high": "#2a2a2c",
+                        "surface-container-highest": "#353437",
+                        "surface-dim": "#131315",
+                        "secondary": "#45dfa4",
+                        "on-secondary-container": "#00452e",
+                        "outline": "#859397",
+                        "inverse-surface": "#e5e1e4",
+                        "on-primary-fixed-variant": "#004e5a",
+                        "on-primary-fixed": "#001f25",
+                        "on-primary-container": "#005763",
+                        "on-surface": "#e5e1e4",
+                        "outline-variant": "#3c494c",
+                        "surface-container-low": "#1c1b1d",
+                        "primary-fixed": "#a2eeff",
+                        "on-tertiary-container": "#94223a",
+                        "tertiary-fixed-dim": "#ffb2b9",
+                        "background": "#131315",
+                        "on-tertiary-fixed-variant": "#891933",
+                        "secondary-container": "#00bd85",
+                        "primary": "#8aebff",
+                        "on-secondary-fixed-variant": "#005137",
+                        "surface-bright": "#39393b",
+                        "surface-variant": "#353437",
+                        "surface-tint": "#2fd9f4",
+                        "inverse-primary": "#006877",
+                        "secondary-fixed": "#68fcbf",
+                        "on-error": "#690005",
+                        "secondary-fixed-dim": "#45dfa4",
+                        "on-secondary-fixed": "#002114"
+                    },
+                    fontFamily: {
+                        "headline": ["Space Grotesk"],
+                        "body": ["Inter"],
+                        "label": ["Inter"],
+                        "mono": ["JetBrains Mono"]
+                    },
+                    borderRadius: { "DEFAULT": "0px", "lg": "0px", "xl": "0px", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .scanning-line {
+            height: 2px;
+            background: #8aebff;
+            box-shadow: 0 0 15px #8aebff;
+            position: absolute;
+            width: 100%;
+            top: 0;
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                top: 0%;
+                opacity: 0;
+            }
+
+            5% {
+                opacity: 1;
+            }
+
+            95% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container">
+    <!-- TopNavBar (The Anchor) -->
+    <header class="flex justify-between items-center w-full px-6 py-4 bg-[#131315] dark:bg-[#131315] fixed top-0 z-50">
+        <div class="text-xl font-bold tracking-tighter text-cyan-400 font-['Space_Grotesk']">[RETROGUARD // AI]</div>
+        <div class="flex items-center gap-6">
+            <span class="font-mono text-xs text-zinc-500 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[14px]">sensors</span>
+                SYSTEM_LATENCY: 12ms
+            </span>
+            <div
+                class="text-cyan-400 font-mono text-xs tracking-widest bg-cyan-400/10 px-3 py-1 border border-cyan-400/20">
+                STATUS: WAITING_INPUT
+            </div>
+        </div>
+    </header>
+    <!-- SideNavBar (Forensic Lens Shell) -->
+    <aside class="hidden md:flex flex-col h-full py-8 bg-[#1c1b1d] dark:bg-[#1c1b1d] fixed left-0 top-0 w-64 pt-24">
+        <div class="px-6 mb-10">
+            <h2 class="font-['Space_Grotesk'] font-bold text-white tracking-tight">FORENSIC_LENS</h2>
+            <p class="font-['Inter'] uppercase tracking-widest text-[10px] text-zinc-500">V2.0.4-STABLE</p>
+        </div>
+        <nav class="flex-1 space-y-1">
+            <a class="flex items-center gap-3 px-6 py-4 bg-[#2a2a2c] text-cyan-400 border-r-2 border-cyan-400 transition-all duration-100"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="biotech">biotech</span>
+                <span class="font-['Inter'] uppercase tracking-widest text-[10px]">Analysis</span>
+            </a>
+            <a class="flex items-center gap-3 px-6 py-4 text-zinc-400 hover:text-zinc-100 hover:bg-[#2a2a2c] transition-colors duration-200"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="verified">verified</span>
+                <span class="font-['Inter'] uppercase tracking-widest text-[10px]">Demo: N64 Original</span>
+            </a>
+            <a class="flex items-center gap-3 px-6 py-4 text-zinc-400 hover:text-zinc-100 hover:bg-[#2a2a2c] transition-colors duration-200"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="report_problem">report_problem</span>
+                <span class="font-['Inter'] uppercase tracking-widest text-[10px]">Demo: N64 Repro</span>
+            </a>
+            <a class="flex items-center gap-3 px-6 py-4 text-zinc-400 hover:text-zinc-100 hover:bg-[#2a2a2c] transition-colors duration-200"
+                href="#">
+                <span class="material-symbols-outlined" data-icon="mop">mop</span>
+                <span class="font-['Inter'] uppercase tracking-widest text-[10px]">Limpiar</span>
+            </a>
+        </nav>
+        <div class="px-6 mt-auto">
+            <button
+                class="w-full py-3 bg-surface-container-high hover:bg-surface-variant transition-colors text-[10px] font-mono tracking-tighter text-cyan-400 border border-outline-variant/30 uppercase">
+                { } Ver JSON Original
+            </button>
+        </div>
+    </aside>
+    <!-- Main Content Canvas -->
+    <main class="md:ml-64 pt-24 min-h-screen px-8 pb-12">
+        <!-- Forensic Stage: Upload & Scan Area -->
+        <section class="mb-12">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-4xl font-headline font-medium text-on-surface tracking-tight uppercase">Forensic
+                        Stage</h1>
+                    <p class="font-mono text-xs text-zinc-500 mt-1 uppercase tracking-widest">Awaiting digital artifacts
+                        for microscopic validation</p>
+                </div>
+                <div class="flex gap-2">
+                    <div
+                        class="bg-surface-container-low px-4 py-2 border border-outline-variant/20 flex items-center gap-3">
+                        <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                        <span class="font-mono text-[10px] text-secondary">AI_CORE: ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+            <!-- Bento Grid - Image Slots -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 h-[400px]">
+                <!-- Front View -->
+                <div
+                    class="relative group cursor-pointer border-2 border-dashed border-outline-variant/30 bg-surface-container-low hover:border-primary transition-colors flex flex-col items-center justify-center overflow-hidden">
+                    <span class="material-symbols-outlined text-zinc-600 group-hover:text-primary mb-4 text-4xl"
+                        data-icon="photo_camera">photo_camera</span>
+                    <span class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">FRONT_SHELL_MACRO</span>
+                    <div class="scanning-line"></div>
+                </div>
+                <!-- Back View -->
+                <div
+                    class="relative group cursor-pointer border-2 border-dashed border-outline-variant/30 bg-surface-container-low hover:border-primary transition-colors flex flex-col items-center justify-center overflow-hidden">
+                    <span class="material-symbols-outlined text-zinc-600 group-hover:text-primary mb-4 text-4xl"
+                        data-icon="photo_camera">photo_camera</span>
+                    <span class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">BACK_LABEL_ID</span>
+                </div>
+                <!-- PCB / Pins -->
+                <div
+                    class="relative group cursor-pointer border-2 border-dashed border-outline-variant/30 bg-surface-container-low hover:border-primary transition-colors flex flex-col items-center justify-center overflow-hidden">
+                    <span class="material-symbols-outlined text-zinc-600 group-hover:text-primary mb-4 text-4xl"
+                        data-icon="photo_camera">photo_camera</span>
+                    <span class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">PCB_TRACES_PINS</span>
+                </div>
+            </div>
+            <!-- Scanning Status Bar -->
+            <div
+                class="mt-6 bg-surface-container-lowest p-4 border-l-4 border-primary flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <span class="material-symbols-outlined text-primary" data-icon="search_check">search_check</span>
+                    <span class="font-mono text-xs text-primary animate-pulse">Analizando tipografía ESRB...</span>
+                </div>
+                <div class="font-mono text-[10px] text-zinc-500">SEGMENTATION_PASS: 04/12</div>
+            </div>
+        </section>
+        <!-- Results Dashboard (Asymmetric Layout) -->
+        <section class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Verdict Banner & Confidence (Left 7/12) -->
+            <div class="lg:col-span-7 space-y-8">
+                <!-- Verdict Card -->
+                <div class="bg-surface-container-low p-8 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4">
+                        <span class="material-symbols-outlined text-secondary/20 text-8xl" data-icon="verified"
+                            style="font-variation-settings: 'FILL' 1;">verified</span>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="font-mono text-[10px] text-secondary tracking-[0.3em] mb-2">VERDICT_FINAL</div>
+                        <h2 class="text-6xl font-headline font-bold text-secondary tracking-tighter mb-4">ORIGINAL
+                            CONFIRMADO</h2>
+                        <p class="max-w-md text-zinc-400 text-sm leading-relaxed">The artifact exhibits historical
+                            manufacturing signatures consistent with first-party production standards (1996-2002). No
+                            anomalies detected in substrate density or mask ROM geometry.</p>
+                    </div>
+                    <!-- Interaction Glow -->
+                    <div class="absolute inset-0 bg-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    </div>
+                </div>
+                <!-- Technical Details & Meta -->
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-surface-container-low p-6">
+                        <div class="font-mono text-[10px] text-zinc-500 mb-4 uppercase">Confidence_Index</div>
+                        <div class="flex items-end gap-3">
+                            <span class="text-5xl font-headline font-bold text-primary">99.4</span>
+                            <span class="text-xl font-headline text-primary-container mb-1">%</span>
+                        </div>
+                        <div class="w-full bg-surface-container-high h-1 mt-4 overflow-hidden">
+                            <div class="bg-primary h-full w-[99.4%]"></div>
+                        </div>
+                    </div>
+                    <div class="bg-surface-container-low p-6">
+                        <div class="font-mono text-[10px] text-zinc-500 mb-4 uppercase">Artifact_Meta</div>
+                        <div class="space-y-2">
+                            <div class="flex justify-between font-mono text-[10px]">
+                                <span class="text-zinc-500">REGION</span>
+                                <span class="text-on-surface">NTSC-U</span>
+                            </div>
+                            <div class="flex justify-between font-mono text-[10px]">
+                                <span class="text-zinc-500">PROD_ID</span>
+                                <span class="text-on-surface">NUS-NSME-USA</span>
+                            </div>
+                            <div class="flex justify-between font-mono text-[10px]">
+                                <span class="text-zinc-500">MFR_DATE</span>
+                                <span class="text-on-surface">MAY_1996</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Partner's Comment -->
+                <div class="bg-surface-container-low p-8 border-l-2 border-zinc-700 italic">
+                    <div class="flex gap-4 items-start">
+                        <span class="material-symbols-outlined text-zinc-500"
+                            data-icon="format_quote">format_quote</span>
+                        <p class="text-lg text-zinc-300 font-serif leading-relaxed">
+                            "The wear on the gold pins follows a natural insertion pattern. Repros usually have a
+                            'too-clean' look on the leads. This one has history written all over its traces."
+                        </p>
+                    </div>
+                    <div class="mt-4 pl-10">
+                        <p class="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">— SENIOR FORENSIC
+                            ANALYST // UNIT_04</p>
+                    </div>
+                </div>
+            </div>
+            <!-- Technical Terminal Log (Right 5/12) -->
+            <div class="lg:col-span-5">
+                <div class="bg-surface-container-lowest h-full border border-outline-variant/10 flex flex-col">
+                    <div
+                        class="p-4 border-b border-outline-variant/10 bg-surface-container-low flex justify-between items-center">
+                        <span class="font-mono text-[10px] text-zinc-400 tracking-widest">ANALYSIS_LOGS_STREAM</span>
+                        <div class="flex gap-1">
+                            <span class="w-2 h-2 rounded-full bg-zinc-700"></span>
+                            <span class="w-2 h-2 rounded-full bg-zinc-700"></span>
+                            <span class="w-2 h-2 rounded-full bg-zinc-700"></span>
+                        </div>
+                    </div>
+                    <div class="p-6 font-mono text-[11px] space-y-3 overflow-y-auto max-h-[600px]">
+                        <div class="flex gap-3 text-secondary">
+                            <span class="shrink-0 opacity-50">[14:02:11]</span>
+                            <span>✅ [N64] Punto de la 'i' cuadrado detectado en el logo trasero.</span>
+                        </div>
+                        <div class="flex gap-3 text-secondary">
+                            <span class="shrink-0 opacity-50">[14:02:12]</span>
+                            <span>✅ Fuente 'Inter' verificada en la tipografía de precaución.</span>
+                        </div>
+                        <div class="flex gap-3 text-zinc-400">
+                            <span class="shrink-0 opacity-50">[14:02:15]</span>
+                            <span>⚙️ Calculando densidad de sombreado en el sello de calidad...</span>
+                        </div>
+                        <div class="flex gap-3 text-secondary">
+                            <span class="shrink-0 opacity-50">[14:02:19]</span>
+                            <span>✅ Seal of Quality: Proporciones áureas confirmadas.</span>
+                        </div>
+                        <div class="flex gap-3 text-zinc-400">
+                            <span class="shrink-0 opacity-50">[14:02:22]</span>
+                            <span>⚙️ Inspección de placa mediante OCR de máscara ROM...</span>
+                        </div>
+                        <div class="flex gap-3 text-secondary">
+                            <span class="shrink-0 opacity-50">[14:02:25]</span>
+                            <span>✅ ID de placa 'NUS-NNE-01' coincide con registro histórico.</span>
+                        </div>
+                        <div class="flex gap-3 text-zinc-400">
+                            <span class="shrink-0 opacity-50">[14:02:30]</span>
+                            <span>⚙️ Comparando con base de datos de repros chinas 2023...</span>
+                        </div>
+                        <div class="flex gap-3 text-secondary">
+                            <span class="shrink-0 opacity-50">[14:02:35]</span>
+                            <span>✅ Ninguna firma de repro conocida detectada.</span>
+                        </div>
+                        <div class="flex gap-3 text-secondary pt-4 border-t border-outline-variant/10">
+                            <span class="shrink-0 opacity-50">[14:02:40]</span>
+                            <span class="font-bold">ANALYSIS_COMPLETE: ITEM_IS_AUTHENTIC</span>
+                        </div>
+                        <!-- Blinking cursor -->
+                        <div class="flex gap-3">
+                            <span class="shrink-0 opacity-50">[14:02:41]</span>
+                            <span class="w-2 h-4 bg-primary animate-pulse"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Placeholder Verdict State (Subtle Footer) -->
+        <section class="mt-12 opacity-30 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
+            <div class="bg-error-container/20 border-2 border-dashed border-error/30 p-8">
+                <div class="flex items-center gap-6">
+                    <span class="material-symbols-outlined text-error text-5xl" data-icon="warning">warning</span>
+                    <div>
+                        <h3 class="text-2xl font-headline font-bold text-error uppercase">Counterfeit Scenario Example
+                        </h3>
+                        <p class="font-mono text-xs text-zinc-500">"ALERTA: REPRODUCCIÓN - Font mismatch on back panel.
+                            Substrate color delta &gt; 15%."</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <!-- BottomNavBar (Mobile Only Anchor) -->
+    <nav
+        class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container flex justify-around items-center h-16 z-50">
+        <button class="flex flex-col items-center text-primary">
+            <span class="material-symbols-outlined" data-icon="biotech"
+                style="font-variation-settings: 'FILL' 1;">biotech</span>
+            <span class="text-[9px] uppercase tracking-tighter">Analyze</span>
+        </button>
+        <button class="flex flex-col items-center text-zinc-500">
+            <span class="material-symbols-outlined" data-icon="history">history</span>
+            <span class="text-[9px] uppercase tracking-tighter">Logs</span>
+        </button>
+        <button class="flex flex-col items-center text-zinc-500">
+            <span class="material-symbols-outlined" data-icon="settings">settings</span>
+            <span class="text-[9px] uppercase tracking-tighter">Tools</span>
+        </button>
+    </nav>
+    <!-- Modal Mockup (Developer Tools) -->
+    <div class="fixed inset-0 bg-surface/80 backdrop-blur-md z-[100] flex items-center justify-center p-8 hidden">
+        <div class="bg-surface-container-low max-w-4xl w-full border border-outline-variant/30 h-[819px] flex flex-col">
+            <div class="p-4 border-b border-outline-variant/30 flex justify-between items-center">
+                <h3 class="font-mono text-xs text-primary uppercase tracking-[0.2em]">RAW_OBJECT_INSPECTOR</h3>
+                <button class="material-symbols-outlined text-zinc-500 hover:text-white"
+                    data-icon="close">close</button>
+            </div>
+            <div class="flex-1 p-8 overflow-y-auto">
+                <pre class="font-mono text-[11px] text-zinc-400">{
+  "artifact_id": "SN-99231-USA",
+  "scanned_at": "2024-05-20T14:02:11Z",
+  "ai_confidence": 0.9942,
+  "verdict": "AUTHENTIC",
+  "analysis_passes": [
+    { "module": "typography_engine", "score": 0.99, "flags": [] },
+    { "module": "substrate_density", "score": 0.98, "flags": [] },
+    { "module": "lead_patina_validation", "score": 1.0, "flags": ["natural_wear_detected"] }
+  ],
+  "signatures": {
+    "esrb_logo": "VERIFIED_BIT_FOR_BIT",
+    "seal_of_quality": "VERIFIED_GRADIENT_CURVE"
+  }
+}
+                </pre>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
