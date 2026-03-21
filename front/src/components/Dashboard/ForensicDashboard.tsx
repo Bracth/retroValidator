@@ -1,73 +1,66 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { ImageDropzone } from './ImageDropzone';
-import { ForensicScanner } from './ForensicScanner';
-import { ConfidenceGauge } from './ConfidenceGauge';
-import { TechnicalLog } from './TechnicalLog';
-import { JsonViewer } from './JsonViewer';
-import { runForensicAnalysis } from '../../services/forensicService';
-import { PeritajeResponse } from '../../hooks/usePeritaje';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Dashboard } from './Dashboard';
+import { usePeritaje } from '../../hooks/usePeritaje';
 import { demoCases } from '../../utils/demoData';
 import type { DemoCase } from '../../utils/demoData';
-import './Dashboard.css';
-
-type DashboardState = 'READY' | 'ANALYZING' | 'RESULTS';
+import { JsonViewer } from './JsonViewer';
 
 export const ForensicDashboard: React.FC = () => {
-  const [state, setState] = useState<DashboardState>('READY');
+  const {
+    isAnalyzing,
+    analysisStatus,
+    currentMessage,
+    results,
+    logs,
+    startAnalysis,
+    reset,
+  } = usePeritaje();
+
   const [images, setImages] = useState<{
     front?: string;
     back?: string;
     pins?: string;
   }>({});
-  const [analysisResult, setAnalysisResult] = useState<PeritajeResponse | null>(null);
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
-  const [showWarning, setShowWarning] = useState(false);
-  const [scannerMessage, setScannerMessage] = useState("");
+  const [currentUploadType, setCurrentUploadType] = useState<'front' | 'back' | 'pins' | null>(null);
+  
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const hasAnyImage = !!(images.front || images.back || images.pins);
-  const hasAllImages = !!(images.front && images.back && images.pins);
+  const hasAllImages = useMemo(() => !!(images.front && images.back && images.pins), [images]);
 
-  const handleStartAnalysis = useCallback(async () => {
-    setState('ANALYZING');
-    
-    try {
-      const filteredImages = [images.front, images.back, images.pins].filter((img): img is string => !!img);
+  const handleUploadClick = (type: 'front' | 'back' | 'pins') => {
+    setCurrentUploadType(type);
+    fileInputRef.current?.click();
+  };
 
-      const result = await runForensicAnalysis(filteredImages, (msg) => setScannerMessage(msg));
-
-      setAnalysisResult(result);
-      setState('RESULTS');
-
-    } catch (error) {
-      console.error('Analysis failed:', error);
-      setState('READY');
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && currentUploadType) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImages((prev) => ({ ...prev, [currentUploadType]: event.target?.result as string }));
+      };
+      reader.readAsDataURL(file);
     }
-  }, [images]);
+    // Reset the input value so the same file can be selected again
+    if (e.target) e.target.value = '';
+  };
+
+  const handleStartAnalysis = useCallback(() => {
+    const imageList = [images.front, images.back, images.pins].filter((img): img is string => !!img);
+    if (imageList.length > 0) {
+      startAnalysis(imageList);
+    }
+  }, [images, startAnalysis]);
 
   useEffect(() => {
-    if (state === 'READY' && hasAllImages) {
+    if (!isAnalyzing && !results && hasAllImages) {
       const timer = setTimeout(() => {
         handleStartAnalysis();
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [state, hasAllImages, handleStartAnalysis]);
-
-  const handleManualAnalyze = () => {
-    if (!hasAllImages) {
-      setShowWarning(true);
-      setTimeout(() => setShowWarning(false), 3000);
-    }
-    handleStartAnalysis();
-  };
-
-  const handleUpload = (type: 'front' | 'back' | 'pins') => (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setImages((prev) => ({ ...prev, [type]: e.target?.result as string }));
-    };
-    reader.readAsDataURL(file);
-  };
+  }, [isAnalyzing, results, hasAllImages, handleStartAnalysis]);
 
   const loadDemo = (demoCase: DemoCase) => {
     setImages({
@@ -79,121 +72,125 @@ export const ForensicDashboard: React.FC = () => {
 
   const clearScanner = () => {
     setImages({});
-    setState('READY');
-    setAnalysisResult(null);
+    reset();
   };
 
-  const getStatus = (type: 'front' | 'back' | 'pins') => {
-    if (state === 'ANALYZING') return 'pending';
-    if (state === 'RESULTS' && analysisResult) {
-      return analysisResult.veredicto_final === 'ORIGINAL' ? 'success' : 'fail';
-    }
-    return images[type] ? 'success' : 'idle';
-  };
+  const transformedLogs = useMemo(() => {
+    return logs.map((log) => ({
+      timestamp: log.timestamp,
+      message: log.message,
+      type: ((): 'success' | 'info' | 'error' | 'primary' => {
+        switch (log.status) {
+          case 'initializing': return 'info';
+          case 'scanning': return 'primary';
+          case 'analyzing': return 'primary';
+          case 'completed': return 'success';
+          case 'error': return 'error';
+          default: return 'info';
+        }
+      })(),
+    }));
+  }, [logs]);
+
+  const verdictMetadata = [
+    { label: 'Region', value: 'NTSC-U' },
+    { label: 'ID', value: 'NUS-NSME-USA' },
+    { label: 'Release', value: '1996' },
+    { label: 'Consola', value: 'Nintendo 64' },
+  ];
 
   return (
-    <div className="forensic-dashboard">
-      <header className="dashboard-header">
-        <h1>RetroValidator // Forensic Analysis Unit</h1>
-        <div className="status-indicator">SYSTEM STATE: {state}</div>
-      </header>
+    <Dashboard>
+      <Dashboard.Header
+        title="Forensic Unit"
+        subtitle="Advanced Cartridge Verification System"
+        statusLabel={isAnalyzing ? `SYSTEM_BUSY: ${analysisStatus.toUpperCase()}` : 'SYSTEM_READY'}
+        statusActive={isAnalyzing}
+      />
 
-      <main className="image-grid">
-        <ImageDropzone
-          label="Front Cover"
-          imageUrl={images.front}
-          onUpload={handleUpload('front')}
-          status={getStatus('front')}
+      <Dashboard.Actions>
+        <Dashboard.ActionButton
+          label="Start Analysis"
+          onClick={handleStartAnalysis}
+          active={hasAllImages && !isAnalyzing}
         />
-        <ImageDropzone
-          label="Back Cover"
-          imageUrl={images.back}
-          onUpload={handleUpload('back')}
-          status={getStatus('back')}
-        />
-        <ImageDropzone
-          label="PCB Pins"
-          imageUrl={images.pins}
-          onUpload={handleUpload('pins')}
-          status={getStatus('pins')}
-        />
-        {state === 'ANALYZING' && <ForensicScanner message={scannerMessage} />}
-      </main>
-
-      {state === 'READY' && (
-        <div className="manual-trigger">
-          <button 
-            className="btn-analyze" 
-            onClick={handleManualAnalyze}
-            disabled={!hasAnyImage}
-          >
-            ANALYZE NOW
-          </button>
-          {showWarning && (
-            <div className="soft-warning">
-              Warning: Partial data. For best results, upload all 3 views.
-            </div>
-          )}
-        </div>
-      )}
-
-      <section className="demo-controls">
-        <button 
-          className="btn-demo" 
+        <Dashboard.ActionButton
+          label="Demo: N64 Original"
           onClick={() => loadDemo(demoCases.MK64_ORIGINAL)}
-          disabled={state === 'ANALYZING'}
-        >
-          LOAD DEMO: MK64
-        </button>
-        <button 
-          className="btn-demo" 
+        />
+        <Dashboard.ActionButton
+          label="Demo: N64 Repro"
           onClick={() => loadDemo(demoCases.MK64_REPRO)}
-          disabled={state === 'ANALYZING'}
-        >
-          LOAD DEMO: PKMN_FAKE
-        </button>
-        <button 
-          className="btn-demo" 
+        />
+        <Dashboard.ActionButton
+          label="Limpiar"
           onClick={clearScanner}
-          disabled={state === 'ANALYZING'}
-        >
-          CLEAR SCANNER
-        </button>
-      </section>
+        />
+      </Dashboard.Actions>
 
-      {state === 'RESULTS' && analysisResult && (
-        <div className="results-container">
-          <button 
-            className="btn-god-mode" 
-            onClick={() => setIsJsonModalOpen(true)}
-          >
-            {'{ }'} VER JSON ORIGINAL
-          </button>
+      <Dashboard.Section>
+        <Dashboard.Grid>
+          <Dashboard.Slot
+            label="Front Cover"
+            image={images.front}
+            isScanning={analysisStatus === 'scanning'}
+            onClick={() => handleUploadClick('front')}
+          />
+          <Dashboard.Slot
+            label="Back Cover"
+            image={images.back}
+            isScanning={analysisStatus === 'scanning'}
+            onClick={() => handleUploadClick('back')}
+          />
+          <Dashboard.Slot
+            label="PCB Pins"
+            image={images.pins}
+            isScanning={analysisStatus === 'scanning'}
+            onClick={() => handleUploadClick('pins')}
+          />
+        </Dashboard.Grid>
 
-          <div className={`verdict-banner verdict-${analysisResult.veredicto_final.toLowerCase()}`}>
-            VERDICT: {analysisResult.veredicto_final}
-          </div>
-          
-          <div className="results-grid">
-            <ConfidenceGauge confidence={analysisResult.confianza_analisis} />
-            <TechnicalLog sections={analysisResult.analisis_por_seccion} />
-          </div>
+        <Dashboard.StatusBar
+          status={isAnalyzing ? currentMessage : (results ? 'Analysis Complete' : 'Waiting for input...')}
+          metadata={isAnalyzing ? 'SEGMENTATION_PASS: 04/12' : (results ? 'REPORT_GENERATED' : 'IDLE')}
+          isScanning={isAnalyzing}
+        />
+      </Dashboard.Section>
 
-          <div className="final-word">
-            <h3>FINAL WORD // COMENTARIO SOCIO</h3>
-            <p>{analysisResult.comentario_socio}</p>
-          </div>
-
-          <button className="btn-demo" onClick={clearScanner}>NEW ANALYSIS</button>
-        </div>
+      {results && (
+        <Dashboard.Section className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <Dashboard.Verdict
+            verdict={results.veredicto_final}
+            description={results.veredicto_final === 'ORIGINAL' 
+              ? 'The cartridge exhibits all characteristics of an authentic production unit. All security markers and manufacturing patterns match the reference database.'
+              : 'Significant discrepancies found in manufacturing patterns and security markers. The unit does not match authentic production standards.'
+            }
+            confidence={results.confianza_analisis}
+            metadata={verdictMetadata}
+            analystComment={results.comentario_socio}
+            isAuthentic={results.veredicto_final === 'ORIGINAL'}
+          />
+          <Dashboard.Log
+            entries={transformedLogs}
+            onViewJson={() => setIsJsonModalOpen(true)}
+          />
+        </Dashboard.Section>
       )}
 
-      {isJsonModalOpen && analysisResult && (
-        <JsonViewer 
-          json={analysisResult} 
-          onClose={() => setIsJsonModalOpen(false)} 
+      {isJsonModalOpen && results && (
+        <JsonViewer
+          json={results}
+          onClose={() => setIsJsonModalOpen(false)}
         />
       )}
-    </div>
+
+      <input
+        type="file"
+        ref={fileInputRef}
+        onChange={onFileChange}
+        accept="image/*"
+        style={{ display: 'none' }}
+      />
+    </Dashboard>
   );
 };

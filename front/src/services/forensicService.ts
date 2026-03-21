@@ -1,13 +1,6 @@
-import { validateForensics, PeritajeResponse } from '../hooks/usePeritaje';
+import { validateForensics, SCANNING_MESSAGES } from '../hooks/usePeritaje';
+import type { PeritajeResponse } from '../hooks/usePeritaje';
 import { urlToBase64, fileToBase64 } from '../utils/imageUtils';
-
-export const SCANNING_MESSAGES = [
-  "Analizando tipografía ESRB...",
-  "Buscando punto de la 'i' en Nintendo...",
-  "Verificando color de PCB (Pines)...",
-  "Escaneando sellos de calidad...",
-  "Sincronizando con base de datos N64...",
-];
 
 export const getColorByConfidence = (val: number): string => {
   if (val <= 40) return '#ff4d4d'; // Red
