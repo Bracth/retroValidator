@@ -1,33 +1,29 @@
 import 'dotenv/config';
 import express, { Request, Response } from 'express';
-import cors from 'cors'; // ¡Añade esto con: npm install cors y npm i -D @types/cors!
+import cors from 'cors';
 import { IAValidatorService } from './valdiatorService';
+import { ConsolaId } from '../shared/consoles';
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Configuración de Middlewares
-app.use(cors()); // FUNDAMENTAL para que React pueda llamar a esta API
-// Aumentamos el límite porque los strings en Base64 de las imágenes pesan mucho
+app.use(cors());
 app.use(express.json({ limit: '50mb' }));
-
-// Instanciamos el servicio UNA SOLA VEZ al arrancar el servidor
 const apiKey = process.env.GEMINI_API_KEY;
 if (!apiKey) {
   console.error('🚨 ERROR CRÍTICO: GEMINI_API_KEY no encontrada en el .env');
-  process.exit(1); // Detenemos el servidor si no hay key, mejor fallar rápido
+  process.exit(1);
 }
 const validator = new IAValidatorService(apiKey);
 
 app.post('/validate', async (req: Request, res: Response): Promise<void> => {
   try {
-    // Ahora esperamos un array de strings en formato Base64
     const { consolaId, imagenesBase64 } = req.body;
 
-    if (!consolaId || !Array.isArray(imagenesBase64) || imagenesBase64.length === 0) {
+    if (!consolaId || !Object.values(ConsolaId).includes(consolaId) || !Array.isArray(imagenesBase64) || imagenesBase64.length === 0) {
       res.status(400).json({
         error: 'Petición inválida',
-        message: 'consolaId (string) y imagenesBase64 (array de strings base64) son requeridos.'
+        message: `consolaId debe ser uno de: ${Object.values(ConsolaId).join(', ')} y imagenesBase64 (array de strings base64) son requeridos.`
       });
       return;
     }

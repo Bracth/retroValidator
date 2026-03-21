@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { urlToBase64, fileToBase64 } from '../utils/imageUtils';
+import { ConsolaId } from '../../../shared/consoles';
 
 export interface PeritajeResponse {
   veredicto_final: 'ORIGINAL' | 'REPRODUCCION' | 'DUDOSO';
@@ -11,7 +12,7 @@ export interface PeritajeResponse {
 }
 
 export interface PeritajePayload {
-  consolaId: string;
+  consolaId: ConsolaId;
   imagenesBase64: string[];
 }
 
@@ -35,7 +36,7 @@ export const SCANNING_MESSAGES = [
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const validateForensics = async (
-  consolaId: string,
+  consolaId: ConsolaId,
   imagenesBase64: string[]
 ): Promise<PeritajeResponse> => {
   const response = await fetch(`${import.meta.env.VITE_API_URL}/validate`, {
@@ -72,7 +73,7 @@ export const usePeritaje = () => {
   }, []);
 
   const mutation = useMutation({
-    mutationFn: async (files: (File | string)[]) => {
+    mutationFn: async ({ consolaId, files }: { consolaId: ConsolaId, files: (File | string)[] }) => {
       setAnalysisStatus('initializing');
       setLogs([]);
       
@@ -102,7 +103,7 @@ export const usePeritaje = () => {
       addLog(SCANNING_MESSAGES[0], 'scanning');
       setCurrentMessage(SCANNING_MESSAGES[0]);
 
-      const apiPromise = validateForensics('n64', base64Images);
+      const apiPromise = validateForensics(consolaId, base64Images);
 
       let isScanning = true;
       let messageIndex = 0;

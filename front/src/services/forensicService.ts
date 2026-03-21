@@ -1,6 +1,7 @@
 import { validateForensics, SCANNING_MESSAGES } from '../hooks/usePeritaje';
 import type { PeritajeResponse } from '../hooks/usePeritaje';
 import { urlToBase64, fileToBase64 } from '../utils/imageUtils';
+import { ConsolaId } from '../../../shared/consoles';
 
 export const getColorByConfidence = (val: number): string => {
   if (val <= 40) return '#ff4d4d'; // Red
@@ -40,7 +41,7 @@ export const runForensicAnalysis = async (
 
   // a. Status: "initializing"
   onProgress("Preparando imágenes para análisis...", "initializing");
-  
+
   // b. Convert all inputs to base64
   const base64Promises = inputs.map(async (input) => {
     try {
@@ -60,7 +61,7 @@ export const runForensicAnalysis = async (
   onProgress(SCANNING_MESSAGES[0], "scanning");
 
   // d. Start the 'validateForensics' API call in the background
-  const apiPromise = validateForensics("n64", base64Images);
+  const apiPromise = validateForensics(ConsolaId.N64, base64Images);
 
   // e. Rotate through 'SCANNING_MESSAGES' every 1500ms while waiting for the API call and the 'delayMs' timer.
   let isScanning = true;

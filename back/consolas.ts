@@ -1,10 +1,12 @@
+import { ConsolaId } from "../shared/consoles";
+
 export interface ReglasConsola {
     puntosClave: string[];
     fotosRequeridas: number;
 }
 
-export const DATABASE_CONSOLAS: Record<string, ReglasConsola> = {
-    "N64": {
+export const DATABASE_CONSOLAS: Record<ConsolaId, ReglasConsola> = {
+    [ConsolaId.N64]: {
         puntosClave: [
             "Punto de la 'i' cuadrado en el logo trasero de Nintendo.",
             "Tornillos de seguridad Gamebit de 3.8mm.",
@@ -12,7 +14,7 @@ export const DATABASE_CONSOLAS: Record<string, ReglasConsola> = {
         ],
         fotosRequeridas: 3
     },
-    "GameBoy": {
+    [ConsolaId.GAMEBOY]: {
         puntosClave: [
             "Número de 2 dígitos troquelado (estampado) en la etiqueta derecha.",
             "Logo de Nintendo en la placa (PCB) visible desde la ranura inferior.",
@@ -20,7 +22,7 @@ export const DATABASE_CONSOLAS: Record<string, ReglasConsola> = {
         ],
         fotosRequeridas: 3
     },
-    "NES": {
+    [ConsolaId.NES]: {
         puntosClave: [
             "Cinco tornillos en versiones tempranas o tres en tardías (no de estrella).",
             "Sello de calidad 'Round' (temprano) o 'Oval' (tardío) según el año.",

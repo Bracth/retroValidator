@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Dashboard } from './Dashboard';
 import { usePeritaje } from '../../hooks/usePeritaje';
 import { demoCases } from '../../utils/demoData';
 import type { DemoCase } from '../../utils/demoData';
 import { JsonViewer } from './JsonViewer';
+import { ConsolaId } from '../../../../shared/consoles';
 
 export const ForensicDashboard: React.FC = () => {
   const {
@@ -23,7 +24,7 @@ export const ForensicDashboard: React.FC = () => {
   }>({});
   const [isJsonModalOpen, setIsJsonModalOpen] = useState(false);
   const [currentUploadType, setCurrentUploadType] = useState<'front' | 'back' | 'pins' | null>(null);
-  
+
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const hasAllImages = useMemo(() => !!(images.front && images.back && images.pins), [images]);
@@ -49,18 +50,9 @@ export const ForensicDashboard: React.FC = () => {
   const handleStartAnalysis = useCallback(() => {
     const imageList = [images.front, images.back, images.pins].filter((img): img is string => !!img);
     if (imageList.length > 0) {
-      startAnalysis(imageList);
+      startAnalysis({ consolaId: ConsolaId.N64, files: imageList });
     }
   }, [images, startAnalysis]);
-
-  useEffect(() => {
-    if (!isAnalyzing && !results && hasAllImages) {
-      const timer = setTimeout(() => {
-        handleStartAnalysis();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isAnalyzing, results, hasAllImages, handleStartAnalysis]);
 
   const loadDemo = (demoCase: DemoCase) => {
     setImages({
@@ -68,6 +60,8 @@ export const ForensicDashboard: React.FC = () => {
       back: demoCase.back,
       pins: demoCase.pins,
     });
+
+    startAnalysis({ consolaId: demoCase.consolaId, files: [demoCase.front, demoCase.back, demoCase.pins] });
   };
 
   const clearScanner = () => {
@@ -161,7 +155,7 @@ export const ForensicDashboard: React.FC = () => {
         <Dashboard.Section className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <Dashboard.Verdict
             verdict={results.veredicto_final}
-            description={results.veredicto_final === 'ORIGINAL' 
+            description={results.veredicto_final === 'ORIGINAL'
               ? 'The cartridge exhibits all characteristics of an authentic production unit. All security markers and manufacturing patterns match the reference database.'
               : 'Significant discrepancies found in manufacturing patterns and security markers. The unit does not match authentic production standards.'
             }
