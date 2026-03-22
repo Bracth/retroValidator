@@ -4,12 +4,15 @@ import { urlToBase64, fileToBase64 } from '../utils/imageUtils';
 import { ConsolaId } from '../../../shared/consoles';
 
 export interface PeritajeResponse {
-  veredicto_final: 'ORIGINAL' | 'REPRODUCCION' | 'DUDOSO';
-  confianza_analisis: number;
-  analisis_por_seccion: Record<string, { hallazgos: string; estado: string }>;
-  tasacion_estimada_estado: number;
-  comentario_socio: string;
-  terminal_logs?: string[];
+  verdict_final: string;
+  confidence_index: number;
+  artifact_meta: {
+    region: string;
+    prod_id: string;
+    mfr_date: string;
+  };
+  terminal_logs: string[];
+  forensic_summary: string;
 }
 
 export interface PeritajePayload {

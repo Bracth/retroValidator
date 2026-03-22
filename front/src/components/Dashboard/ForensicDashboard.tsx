@@ -103,12 +103,15 @@ export const ForensicDashboard: React.FC = () => {
     }));
   }, [logs]);
 
-  const verdictMetadata = [
-    { label: 'Region', value: 'NTSC-U' },
-    { label: 'ID', value: 'NUS-NSME-USA' },
-    { label: 'Release', value: '1996' },
-    { label: 'Consola', value: selectedConsole === ConsolaId.N64 ? 'Nintendo 64' : selectedConsole === ConsolaId.NES ? 'NES' : 'GameBoy' },
-  ];
+  const verdictMetadata = useMemo(() => {
+    if (!results) return [];
+    return [
+      { label: 'Region', value: results.artifact_meta.region },
+      { label: 'ID', value: results.artifact_meta.prod_id },
+      { label: 'Release', value: results.artifact_meta.mfr_date },
+      { label: 'Consola', value: selectedConsole === ConsolaId.N64 ? 'Nintendo 64' : selectedConsole === ConsolaId.NES ? 'NES' : 'GameBoy' },
+    ];
+  }, [results, selectedConsole]);
 
   return (
     <Dashboard>
@@ -200,15 +203,12 @@ export const ForensicDashboard: React.FC = () => {
       {results && (
         <Dashboard.Section className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <Dashboard.Verdict
-            verdict={results.veredicto_final}
-            description={results.veredicto_final === 'ORIGINAL'
-              ? 'The cartridge exhibits all characteristics of an authentic production unit. All security markers and manufacturing patterns match the reference database.'
-              : 'Significant discrepancies found in manufacturing patterns and security markers. The unit does not match authentic production standards.'
-            }
-            confidence={results.confianza_analisis}
+            verdict={results.verdict_final}
+            description={results.forensic_summary}
+            confidence={results.confidence_index}
             metadata={verdictMetadata}
-            analystComment={results.comentario_socio}
-            isAuthentic={results.veredicto_final === 'ORIGINAL'}
+            analystComment={results.forensic_summary}
+            isAuthentic={results.verdict_final.toUpperCase().includes('ORIGINAL')}
           />
           <Dashboard.Log
             entries={transformedLogs}

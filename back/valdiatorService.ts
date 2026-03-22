@@ -3,11 +3,15 @@ import * as fs from "fs";
 import { DATABASE_CONSOLAS } from "./consolas";
 
 interface PeritajeResponse {
-    veredicto_final: "ORIGINAL" | "REPRODUCCION" | "DUDOSO";
-    confianza_analisis: number;
-    analisis_por_seccion: Record<string, { hallazgos: string; estado: string }>;
-    tasacion_estimada_estado: number;
-    comentario_socio: string;
+    verdict_final: string;
+    confidence_index: number;
+    artifact_meta: {
+        region: string;
+        prod_id: string;
+        mfr_date: string;
+    };
+    terminal_logs: string[];
+    forensic_summary: string;
 }
 
 import { ConsolaId } from "../shared/consoles";

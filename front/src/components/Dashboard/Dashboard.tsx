@@ -54,11 +54,10 @@ export interface ActionButtonProps {
 const ActionButton: React.FC<ActionButtonProps> = ({ label, onClick, active = false }) => (
   <button
     onClick={onClick}
-    className={`px-6 py-2 text-[11px] font-bold uppercase tracking-widest font-label transition-all border ${
-      active
+    className={`px-6 py-2 text-[11px] font-bold uppercase tracking-widest font-label transition-all border ${active
         ? 'bg-primary/10 border-primary/30 text-primary hover:bg-primary/20'
         : 'bg-surface-container-low border-outline-variant/20 text-zinc-400 hover:border-primary/50 hover:text-zinc-200'
-    }`}
+      }`}
   >
     {label}
   </button>
@@ -188,22 +187,6 @@ const Verdict: React.FC<VerdictProps> = ({ verdict, description, confidence, met
           </div>
         </div>
       </div>
-
-      {analystComment && (
-        <div className="bg-surface-container-low p-10 border-l-2 border-primary/40 italic relative">
-          <div className="flex gap-4 items-start">
-            <span className="material-symbols-outlined text-primary/30 text-3xl">format_quote</span>
-            <p className="text-xl text-zinc-300 font-body leading-relaxed">
-              "{analystComment}"
-            </p>
-          </div>
-          <div className="mt-6 pl-12">
-            <p className="font-mono text-[10px] text-zinc-500 uppercase tracking-[0.2em]">
-              — SENIOR FORENSIC ANALYST // UNIT_04
-            </p>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -58,7 +58,7 @@ export const runForensicAnalysis = async (
   const base64Images = (await Promise.all(base64Promises)).filter((img): img is string => img !== null);
 
   // c. Status: "scanning"
-  onProgress(SCANNING_MESSAGES[0], "scanning");
+  onProgress(SCANNING_MESSAGES.N64[0], "scanning");
 
   // d. Start the 'validateForensics' API call in the background
   const apiPromise = validateForensics(ConsolaId.N64, base64Images);
@@ -71,8 +71,8 @@ export const runForensicAnalysis = async (
     while (isScanning) {
       await sleep(1500);
       if (!isScanning) break;
-      messageIndex = (messageIndex + 1) % SCANNING_MESSAGES.length;
-      onProgress(SCANNING_MESSAGES[messageIndex], "scanning");
+      messageIndex = (messageIndex + 1) % SCANNING_MESSAGES.N64.length;
+      onProgress(SCANNING_MESSAGES.N64[messageIndex], "scanning");
     }
   })();
 
