@@ -25,10 +25,41 @@ export class IAValidatorService {
 
         const model = this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const prompt = `Actúa como perito experto en ${consolaId}. 
-    Analiza las fotos adjuntas siguiendo estas reglas críticas: ${config.puntosClave.join(" ")}.
-    Responde estrictamente en formato JSON con la siguiente estructura:
-    { "veredicto_final": "...", "confianza_analisis": 0-100, "analisis_por_seccion": {}, "tasacion_estimada_estado": 1-10, "comentario_socio": "" }`;
+        const prompt = `
+Eres el núcleo de inteligencia artificial de 'RetroGuard', un perito forense implacable especializado en hardware de ${consolaId}.
+Analiza las ${config.fotosRequeridas} imágenes adjuntas en este orden estricto: ${config.ordenImagenes}.
+
+⚖️ REGLA DE ESCEPTICISMO NEUTRAL (ANTI-ALUCINACIONES):
+Tu postura es estrictamente neutral. NO asumas que es original, pero TAMPOCO asumas que es falso. Basa tu veredicto ÚNICAMENTE en evidencia visual irrefutable. Si la compresión de la foto hace que un micro-detalle (como un tornillo o el punto de una letra) se vea borroso o ambiguo, TIENES ESTRICTAMENTE PROHIBIDO adivinar su forma geométrica. En caso de ambigüedad, no declares el cartucho como falso; debes declarar el detalle como "NO VERIFICABLE" y emitir un veredicto de "INCONCLUSO".
+
+🛑 REGLA DE RESOLUCIÓN CRÍTICA (ANTI-FALSOS POSITIVOS):
+Asume por defecto que el cartucho es una REPRODUCCIÓN de altísima calidad. Para declarar un juego como "ORIGINAL CONFIRMADO", DEBES poder ver los detalles microscópicos (texturas, tornillos, tipografías) con total nitidez. Si la foto está borrosa, tomada desde muy lejos o la resolución no te permite asegurar al 100% las reglas críticas, TIENES PROHIBIDO validarlo. En ese caso, devuelve estrictamente "INCONCLUSO" y exige fotos macro más cercanas. ¡NO ADIVINES PÍXELES QUE NO VES!
+
+⚠️ REGLAS CRÍTICAS (DEALBREAKERS):
+Si detectas que se incumple CUALQUIERA de estas reglas, el veredicto DEBE ser "ALERTA: REPRODUCCIÓN" con una confianza del 99%:
+- ${config.reglasCriticas.join('\n- ')}
+
+🔍 PUNTOS DE VERIFICACIÓN SECUNDARIOS:
+Úsalos para construir tu log de análisis técnico:
+- ${config.puntosVerificacion.join('\n- ')}
+
+Responde EXCLUSIVAMENTE en formato JSON puro (sin bloques de código markdown \`\`\`json) con esta estructura exacta:
+{
+  "verdict_final": "ORIGINAL CONFIRMADO | ALERTA: REPRODUCCIÓN | INCONCLUSO",
+  "confidence_index": 99.4,
+  "artifact_meta": {
+      "region": "Ej: NTSC-U",
+      "prod_id": "Ej: NES-XX-USA",
+      "mfr_date": "Ej: MAY_1996 o UNKNOWN"
+  },
+  "terminal_logs": [
+      "✅ [FRONT_SHELL] Sello de calidad verificado.",
+      "❌ [BACK_SHELL] Anomalía detectada en tornillería.",
+      "⚠️ [RESOLUTION] No se puede verificar la 'i' por falta de nitidez."
+  ],
+  "forensic_summary": "Breve nota técnica sobre el veredicto."
+}
+`;
 
         const imageParts: Part[] = imagenesBase64.map(base64String => ({
             inlineData: {
