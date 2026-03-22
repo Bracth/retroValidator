@@ -96,6 +96,7 @@ export const ForensicDashboard: React.FC = () => {
           case 'success': return 'success';
           case 'warning': return 'warning';
           case 'error': return 'error';
+          case 'info': return 'info';
           default: return 'info';
         }
       })(),

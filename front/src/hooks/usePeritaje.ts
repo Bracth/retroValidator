@@ -21,7 +21,7 @@ export interface LogEntry {
   id: string;
   timestamp: string;
   message: string;
-  status: 'initializing' | 'scanning' | 'analyzing' | 'completed' | 'error' | 'success' | 'warning';
+  status: 'initializing' | 'scanning' | 'analyzing' | 'completed' | 'error' | 'success' | 'warning' | 'info';
 }
 
 export type AnalysisStatus = 'initializing' | 'scanning' | 'analyzing' | 'idle';
