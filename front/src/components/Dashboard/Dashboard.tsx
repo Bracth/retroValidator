@@ -66,10 +66,11 @@ const ActionButton: React.FC<ActionButtonProps> = ({ label, onClick, active = fa
 
 export interface GridProps {
   children: React.ReactNode;
+  className?: string;
 }
 
-const Grid: React.FC<GridProps> = ({ children }) => (
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[400px]">
+const Grid: React.FC<GridProps> = ({ children, className = '' }) => (
+  <div className={`grid grid-cols-1 md:grid-cols-3 gap-6 h-auto md:h-[400px] ${className}`}>
     {children}
   </div>
 );
@@ -210,7 +211,7 @@ const Verdict: React.FC<VerdictProps> = ({ verdict, description, confidence, met
 export interface LogEntry {
   timestamp: string;
   message: string;
-  type: 'success' | 'info' | 'error' | 'primary';
+  type: 'success' | 'info' | 'error' | 'primary' | 'warning';
 }
 
 export interface LogProps {
@@ -223,6 +224,7 @@ const Log: React.FC<LogProps> = ({ entries, onViewJson }) => {
     switch (type) {
       case 'success': return 'text-secondary';
       case 'error': return 'text-error';
+      case 'warning': return 'text-amber-400';
       case 'primary': return 'text-primary';
       default: return 'text-zinc-400';
     }

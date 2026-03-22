@@ -39,14 +39,14 @@ export const DATABASE_CONSOLAS: Record<ConsolaId, ReglasConsola> = {
         fotosRequeridas: 2,
         ordenImagenes: "1 (Frontal), 2 (Trasera)",
         reglasCriticas: [
-            "[FOTO 2 - TRASERA]: Revisa la tornillería. Los cartuchos originales de NES tienen O BIEN 5 tornillos de cabeza plana (modelos antiguos), O BIEN 3 tornillos de seguridad Gamebit de 3.8mm (modelos posteriores). Si detectas TORNILLOS DE ESTRELLA (Philips), ES UNA REPRODUCCIÓN AL 100%.",
-            "[FOTO 2 - TRASERA]: Revisa el texto de precaución trasero. Las etiquetas falsas suelen tener errores tipográficos o no tener el troquelado correcto. Si es una etiqueta brillante de mala calidad, es sospechoso."
+            "[FOTO 2 - TRASERA]: Revisa la tornillería en las ESQUINAS de la carcasa. ATENCIÓN CRÍTICA: El pequeño círculo hundido en el centro exacto de la parte trasera NO ES UN TORNILLO, es una marca del molde de plástico. IGNÓRALO por completo. Busca los tornillos reales en las esquinas inferiores. Si esos tornillos reales son de estrella (Philips), declara REPRODUCCIÓN.",
+            "[FOTO 2 - TRASERA]: Examina la etiqueta de precaución. Las falsificaciones tienen colores deslavados o texto ilegible."
         ],
         puntosVerificacion: [
-            "[FOTO 1 - FRONTAL]: El sello 'Official Nintendo Seal of Quality' debe ser ovalado (o redondo en versiones muy tempranas) con un tono dorado metálico.",
-            "[FOTO 1 - FRONTAL]: El código de producto debe seguir el formato NES-XX-USA/EUR/FRA/ESP.",
-            "[FOTO 2 - TRASERA]: En las versiones de 3 tornillos, la carcasa tiene dos pestañas de plástico en la parte superior.",
-            "[REGLA DE FORMATO]: IMPORTANTE: Cada frase que generes en el array 'terminal_logs' DEBE ser extremadamente concisa, tipo log de consola de sistema (Máximo 10-15 palabras por log)."
+            "[FOTO 1 - FRONTAL]: El sello 'Official Nintendo Seal of Quality' debe ser ovalado o redondo con un tono dorado.",
+            "[FOTO 1 - FRONTAL]: El código de producto debe seguir el formato NES-XX-XXX (ej. NES-R3-ESP).",
+            "[FOTO 2 - TRASERA]: ATENCIÓN: Los textos de copyright con códigos europeos (ej. '© M Nintendo 1985 DAS', FAH, ESP, NOE) son PERFECTAMENTE ORIGINALES y válidos para la región PAL. NO los marques como anomalía.",
+            "[REGLA DE FORMATO]: Cada log en 'terminal_logs' debe ser muy conciso (Máximo 15 palabras)."
         ]
     }
 };

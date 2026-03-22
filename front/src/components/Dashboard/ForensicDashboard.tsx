@@ -17,6 +17,7 @@ export const ForensicDashboard: React.FC = () => {
     reset,
   } = usePeritaje();
 
+  const [selectedConsole, setSelectedConsole] = useState<ConsolaId>(ConsolaId.N64);
   const [images, setImages] = useState<{
     front?: string;
     back?: string;
@@ -27,7 +28,12 @@ export const ForensicDashboard: React.FC = () => {
 
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const hasAllImages = useMemo(() => !!(images.front && images.back && images.pins), [images]);
+  const hasAllImages = useMemo(() => {
+    if (selectedConsole === ConsolaId.NES) {
+      return !!(images.front && images.back);
+    }
+    return !!(images.front && images.back && images.pins);
+  }, [images, selectedConsole]);
 
   const handleUploadClick = (type: 'front' | 'back' | 'pins') => {
     setCurrentUploadType(type);
@@ -48,20 +54,28 @@ export const ForensicDashboard: React.FC = () => {
   };
 
   const handleStartAnalysis = useCallback(() => {
-    const imageList = [images.front, images.back, images.pins].filter((img): img is string => !!img);
+    const imageList = selectedConsole === ConsolaId.NES
+      ? [images.front, images.back].filter((img): img is string => !!img)
+      : [images.front, images.back, images.pins].filter((img): img is string => !!img);
+    
     if (imageList.length > 0) {
-      startAnalysis({ consolaId: ConsolaId.N64, files: imageList });
+      startAnalysis({ consolaId: selectedConsole, files: imageList });
     }
-  }, [images, startAnalysis]);
+  }, [images, selectedConsole, startAnalysis]);
 
   const loadDemo = (demoCase: DemoCase) => {
+    setSelectedConsole(demoCase.consolaId);
     setImages({
       front: demoCase.front,
       back: demoCase.back,
       pins: demoCase.pins,
     });
 
-    startAnalysis({ consolaId: demoCase.consolaId, files: [demoCase.front, demoCase.back, demoCase.pins] });
+    const imageList = demoCase.consolaId === ConsolaId.NES
+      ? [demoCase.front, demoCase.back]
+      : [demoCase.front, demoCase.back, demoCase.pins as string];
+
+    startAnalysis({ consolaId: demoCase.consolaId, files: imageList });
   };
 
   const clearScanner = () => {
@@ -73,12 +87,14 @@ export const ForensicDashboard: React.FC = () => {
     return logs.map((log) => ({
       timestamp: log.timestamp,
       message: log.message,
-      type: ((): 'success' | 'info' | 'error' | 'primary' => {
+      type: ((): 'success' | 'info' | 'error' | 'primary' | 'warning' => {
         switch (log.status) {
           case 'initializing': return 'info';
           case 'scanning': return 'primary';
           case 'analyzing': return 'primary';
           case 'completed': return 'success';
+          case 'success': return 'success';
+          case 'warning': return 'warning';
           case 'error': return 'error';
           default: return 'info';
         }
@@ -90,7 +106,7 @@ export const ForensicDashboard: React.FC = () => {
     { label: 'Region', value: 'NTSC-U' },
     { label: 'ID', value: 'NUS-NSME-USA' },
     { label: 'Release', value: '1996' },
-    { label: 'Consola', value: 'Nintendo 64' },
+    { label: 'Consola', value: selectedConsole === ConsolaId.N64 ? 'Nintendo 64' : selectedConsole === ConsolaId.NES ? 'NES' : 'GameBoy' },
   ];
 
   return (
@@ -103,18 +119,45 @@ export const ForensicDashboard: React.FC = () => {
       />
 
       <Dashboard.Actions>
+        <div className="flex items-center gap-4 mr-6 px-4 border-r border-outline-variant/20">
+          <span className="font-mono text-[10px] text-zinc-500 uppercase tracking-widest">Console:</span>
+          <div className="flex gap-2">
+            {[ConsolaId.N64, ConsolaId.GAMEBOY, ConsolaId.NES].map((id) => (
+              <button
+                key={id}
+                onClick={() => setSelectedConsole(id)}
+                className={`px-3 py-1 text-[10px] font-mono border transition-all ${
+                  selectedConsole === id
+                    ? 'bg-primary text-black border-primary'
+                    : 'bg-transparent text-zinc-500 border-zinc-700 hover:border-zinc-500'
+                }`}
+              >
+                {id}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <Dashboard.ActionButton
           label="Start Analysis"
           onClick={handleStartAnalysis}
           active={hasAllImages && !isAnalyzing}
         />
         <Dashboard.ActionButton
-          label="Demo: N64 Original"
+          label="N64 Orig"
           onClick={() => loadDemo(demoCases.MK64_ORIGINAL)}
         />
         <Dashboard.ActionButton
-          label="Demo: N64 Repro"
+          label="N64 Repro"
           onClick={() => loadDemo(demoCases.MK64_REPRO)}
+        />
+        <Dashboard.ActionButton
+          label="NES Orig"
+          onClick={() => loadDemo(demoCases.NES_ORIGINAL)}
+        />
+        <Dashboard.ActionButton
+          label="NES Repro"
+          onClick={() => loadDemo(demoCases.NES_REPRO)}
         />
         <Dashboard.ActionButton
           label="Limpiar"
@@ -123,7 +166,7 @@ export const ForensicDashboard: React.FC = () => {
       </Dashboard.Actions>
 
       <Dashboard.Section>
-        <Dashboard.Grid>
+        <Dashboard.Grid className={selectedConsole === ConsolaId.NES ? 'md:grid-cols-2 max-w-4xl mx-auto' : ''}>
           <Dashboard.Slot
             label="Front Cover"
             image={images.front}
@@ -136,12 +179,14 @@ export const ForensicDashboard: React.FC = () => {
             isScanning={analysisStatus === 'scanning'}
             onClick={() => handleUploadClick('back')}
           />
-          <Dashboard.Slot
-            label="PCB Pins"
-            image={images.pins}
-            isScanning={analysisStatus === 'scanning'}
-            onClick={() => handleUploadClick('pins')}
-          />
+          {selectedConsole !== ConsolaId.NES && (
+            <Dashboard.Slot
+              label="PCB Pins"
+              image={images.pins}
+              isScanning={analysisStatus === 'scanning'}
+              onClick={() => handleUploadClick('pins')}
+            />
+          )}
         </Dashboard.Grid>
 
         <Dashboard.StatusBar

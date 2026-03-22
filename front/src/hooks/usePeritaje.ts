@@ -9,6 +9,7 @@ export interface PeritajeResponse {
   analisis_por_seccion: Record<string, { hallazgos: string; estado: string }>;
   tasacion_estimada_estado: number;
   comentario_socio: string;
+  terminal_logs?: string[];
 }
 
 export interface PeritajePayload {
@@ -20,18 +21,36 @@ export interface LogEntry {
   id: string;
   timestamp: string;
   message: string;
-  status: 'initializing' | 'scanning' | 'analyzing' | 'completed' | 'error';
+  status: 'initializing' | 'scanning' | 'analyzing' | 'completed' | 'error' | 'success' | 'warning';
 }
 
 export type AnalysisStatus = 'initializing' | 'scanning' | 'analyzing' | 'idle';
 
-export const SCANNING_MESSAGES = [
-  'Analizando tipografía ESRB...',
-  "Buscando punto de la 'i' en Nintendo...",
-  'Verificando color de PCB (Pines)...',
-  'Escaneando sellos de calidad...',
-  'Sincronizando con base de datos N64...',
-];
+export const SCANNING_MESSAGES: Record<ConsolaId, string[]> = {
+  N64: [
+    '[SYS] Inicializando escáner macro...',
+    '[IA] Analizando tipografía frontal y Seal of Quality...',
+    "[IA] Buscando geometría exacta del punto de la 'i'...",
+    '[IA] Verificando tornillería Gamebit 3.8mm...',
+    '[SYS] Analizando densidad de PCB y desgaste de pines...',
+    '[NET] Cruzando datos con registros de N64 (1996-2002)...'
+  ],
+  NES: [
+    '[SYS] Inicializando módulo de reconocimiento de 8-bits...',
+    '[IA] Analizando proporciones del Seal of Quality ovalado...',
+    '[IA] Verificando arquitectura de la carcasa (3 vs 5 tornillos)...',
+    '[IA] Inspeccionando códigos de distribución (NTSC/PAL)...',
+    '[NET] Sincronizando con base de datos de NES (1985-1994)...'
+  ],
+  GameBoy: [
+    '[SYS] Inicializando escáner macro...',
+    '[IA] Analizando tipografía frontal y Seal of Quality...',
+    "[IA] Buscando geometría exacta del punto de la 'i'...",
+    '[IA] Verificando tornillería Gamebit 3.8mm...',
+    '[SYS] Analizando densidad de PCB y desgaste de pines...',
+    '[NET] Cruzando datos con registros de N64 (1996-2002)...'
+  ]
+};
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -76,7 +95,7 @@ export const usePeritaje = () => {
     mutationFn: async ({ consolaId, files }: { consolaId: ConsolaId, files: (File | string)[] }) => {
       setAnalysisStatus('initializing');
       setLogs([]);
-      
+
       const startTime = Date.now();
       const delayMs = 4000;
 
@@ -100,8 +119,8 @@ export const usePeritaje = () => {
       );
 
       setAnalysisStatus('scanning');
-      addLog(SCANNING_MESSAGES[0], 'scanning');
-      setCurrentMessage(SCANNING_MESSAGES[0]);
+      addLog(SCANNING_MESSAGES[consolaId][0], 'scanning');
+      setCurrentMessage(SCANNING_MESSAGES[consolaId][0]);
 
       const apiPromise = validateForensics(consolaId, base64Images);
 
@@ -110,8 +129,8 @@ export const usePeritaje = () => {
 
       const rotationInterval = setInterval(() => {
         if (isScanning) {
-          messageIndex = (messageIndex + 1) % SCANNING_MESSAGES.length;
-          const msg = SCANNING_MESSAGES[messageIndex];
+          messageIndex = (messageIndex + 1) % SCANNING_MESSAGES[consolaId].length;
+          const msg = SCANNING_MESSAGES[consolaId][messageIndex];
           setCurrentMessage(msg);
           addLog(msg, 'scanning');
         }
@@ -135,6 +154,17 @@ export const usePeritaje = () => {
         addLog(finalMsg, 'analyzing');
 
         await sleep(800);
+
+        // Inyectamos los logs técnicos detallados que vienen del motor de peritaje
+        if (result.terminal_logs) {
+          result.terminal_logs.forEach(logLine => {
+            let status: LogEntry['status'] = 'info';
+            if (logLine.includes('✅')) status = 'success';
+            if (logLine.includes('❌')) status = 'error';
+            if (logLine.includes('⚠️')) status = 'warning';
+            addLog(logLine, status);
+          });
+        }
 
         addLog('Análisis completado con éxito.', 'completed');
         setAnalysisStatus('idle');
